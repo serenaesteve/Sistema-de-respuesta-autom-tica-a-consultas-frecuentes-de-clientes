@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}ReplyBot{% endblock %}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:       #f8f7ff;
+  --surface:  #ffffff;
+  --surface2: #f1f0ff;
+  --border:   #e4e2f8;
+  --border2:  #ccc9f5;
+  --text:     #16143a;
+  --text2:    #6b68a0;
+  --text3:    #a8a5c8;
+  --violet:   #6c47ff;
+  --violet2:  #5535e0;
+  --violet-light: #ede9ff;
+  --cyan:     #00d4ff;
+  --pink:     #ff4ecd;
+  --green:    #00e096;
+  --amber:    #ffb800;
+  --red:      #ff3b6b;
+  --grad:     linear-gradient(135deg, #6c47ff 0%, #a855f7 50%, #ec4899 100%);
+  --grad2:    linear-gradient(135deg, #00d4ff 0%, #6c47ff 100%);
+  --radius:   12px;
+  --radius-lg: 18px;
+  --shadow:   0 2px 20px rgba(108,71,255,0.10);
+  --shadow-lg: 0 8px 40px rgba(108,71,255,0.18);
+  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+body { background: var(--bg); color: var(--text); font-family: var(--font); min-height: 100vh; line-height: 1.6; }
+a { color: var(--violet); text-decoration: none; }
+a:hover { opacity: 0.8; }
+
+/* Inputs */
+input, textarea, select {
+  background: var(--surface); border: 1.5px solid var(--border);
+  color: var(--text); border-radius: var(--radius); padding: 10px 14px;
+  font-size: 14px; width: 100%; font-family: var(--font);
+  outline: none; transition: border 0.2s, box-shadow 0.2s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--violet); box-shadow: 0 0 0 3px rgba(108,71,255,0.12);
+}
+textarea { resize: vertical; min-height: 90px; }
+select { cursor: pointer; }
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  padding: 9px 18px; border-radius: var(--radius); border: none;
+  cursor: pointer; font-size: 14px; font-family: var(--font);
+  font-weight: 600; transition: all 0.2s; text-decoration: none; white-space: nowrap;
+}
+.btn-primary {
+  background: var(--grad); color: #fff;
+  box-shadow: 0 4px 15px rgba(108,71,255,0.35);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(108,71,255,0.45); opacity: 1; }
+.btn-primary:active { transform: translateY(0); }
+.btn-ghost {
+  background: var(--surface); color: var(--text2);
+  border: 1.5px solid var(--border); box-shadow: var(--shadow);
+}
+.btn-ghost:hover { background: var(--violet-light); color: var(--violet); border-color: var(--violet); opacity: 1; }
+.btn-danger { background: rgba(255,59,107,0.1); color: var(--red); border: 1.5px solid rgba(255,59,107,0.25); }
+.btn-danger:hover { background: rgba(255,59,107,0.2); opacity: 1; }
+.btn-sm { padding: 6px 12px; font-size: 12px; border-radius: 9px; }
+.btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 9px; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+.badge-green { background: rgba(0,224,150,0.12); color: #00a36b; }
+.badge-red   { background: rgba(255,59,107,0.12); color: var(--red); }
+.badge-violet{ background: var(--violet-light); color: var(--violet); }
+.badge-amber { background: rgba(255,184,0,0.12); color: #b37f00; }
+
+/* Cards */
+.card {
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg); box-shadow: var(--shadow);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 10px; }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+  background: var(--text); color: #fff; padding: 12px 20px; border-radius: var(--radius);
+  font-size: 13px; font-weight: 500; box-shadow: var(--shadow-lg);
+  animation: slideUp 0.3s ease; display: none;
+}
+.toast.show { display: block; }
+@keyframes slideUp { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<div class="toast" id="toast"></div>
+<script>
+function toast(msg, dur=3000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+</script>
+</body>
+</html>

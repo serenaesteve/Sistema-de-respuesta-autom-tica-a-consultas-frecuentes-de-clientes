@@ -1,0 +1,267 @@
+{% extends "base.html" %}
+{% block title %}Configuración · ReplyBot{% endblock %}
+{% block extra_head %}
+<style>
+body { background: var(--bg); display:flex; min-height:100vh; }
+.onb-wrap { display:flex; width:100%; }
+.onb-side {
+  width:280px; flex-shrink:0; background:var(--surface); border-right:1.5px solid var(--border);
+  padding: 36px 28px; display:flex; flex-direction:column;
+}
+.onb-logo { font-size:20px; font-weight:800; margin-bottom:40px; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.onb-steps { display:flex; flex-direction:column; gap:6px; flex:1; }
+.onb-step { display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:10px; transition:all 0.2s; }
+.onb-step.done { opacity:0.6; }
+.onb-step.active { background:var(--violet-light); }
+.onb-step-num {
+  width:30px; height:30px; border-radius:50%; border:2px solid var(--border2);
+  display:flex; align-items:center; justify-content:center; font-size:12px;
+  font-weight:700; color:var(--text3); flex-shrink:0; background:var(--surface);
+}
+.onb-step.done .onb-step-num { background:var(--green); border-color:var(--green); color:#fff; font-size:14px; }
+.onb-step.active .onb-step-num { background:var(--grad); border:none; color:#fff; }
+.onb-step-info h4 { font-size:13px; font-weight:600; color:var(--text); }
+.onb-step-info p { font-size:11px; color:var(--text3); }
+.onb-step.active .onb-step-info h4 { color:var(--violet); }
+.onb-progress-wrap { margin-top:auto; padding-top:20px; }
+.onb-progress-label { font-size:12px; color:var(--text2); margin-bottom:8px; display:flex; justify-content:space-between; }
+.onb-progress-bar { height:5px; background:var(--border); border-radius:10px; overflow:hidden; }
+.onb-progress-fill { height:100%; background:var(--grad); border-radius:10px; transition:width 0.4s ease; }
+
+.onb-main { flex:1; overflow-y:auto; display:flex; align-items:flex-start; justify-content:center; padding:50px 40px; }
+.onb-card { width:100%; max-width:620px; }
+.onb-header { margin-bottom:32px; }
+.onb-header .step-badge { display:inline-flex; align-items:center; gap:6px; background:var(--violet-light); color:var(--violet); padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; margin-bottom:14px; }
+.onb-header h1 { font-size:28px; font-weight:800; margin-bottom:8px; }
+.onb-header p { font-size:15px; color:var(--text2); }
+.form-section { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:24px; margin-bottom:16px; }
+.form-section-title { font-size:13px; font-weight:700; color:var(--text2); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.form-group { margin-bottom:16px; }
+.form-group:last-child { margin-bottom:0; }
+.form-group label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:6px; }
+.form-group .hint { font-size:12px; color:var(--text3); margin-top:5px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+.tono-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.tono-opt { position:relative; }
+.tono-opt input { position:absolute; opacity:0; width:0; height:0; }
+.tono-label {
+  display:block; padding:12px; border:1.5px solid var(--border);
+  border-radius:var(--radius); cursor:pointer; text-align:center;
+  transition:all 0.2s; background:var(--surface);
+}
+.tono-label .tono-icon { font-size:20px; display:block; margin-bottom:4px; }
+.tono-label .tono-name { font-size:12px; font-weight:600; color:var(--text2); }
+.tono-opt input:checked + .tono-label { border-color:var(--violet); background:var(--violet-light); }
+.tono-opt input:checked + .tono-label .tono-name { color:var(--violet); }
+.onb-footer { display:flex; align-items:center; justify-content:space-between; margin-top:28px; }
+.onb-skip { font-size:13px; color:var(--text3); cursor:pointer; background:none; border:none; font-family:var(--font); }
+.onb-skip:hover { color:var(--text2); }
+</style>
+{% endblock %}
+{% block body %}
+<div class="onb-wrap">
+  <!-- Sidebar pasos -->
+  <aside class="onb-side">
+    <div class="onb-logo">ReplyBot 🤖</div>
+    <div class="onb-steps">
+      {% for p in pasos %}
+      <div class="onb-step {% if p.num < paso %}done{% elif p.num == paso %}active{% endif %}">
+        <div class="onb-step-num">{% if p.num < paso %}✓{% else %}{{ p.num }}{% endif %}</div>
+        <div class="onb-step-info">
+          <h4>{{ p.titulo }}</h4>
+          <p>{{ p.icono }}</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="onb-progress-wrap">
+      <div class="onb-progress-label">
+        <span>Progreso</span>
+        <span>{{ paso }}/6</span>
+      </div>
+      <div class="onb-progress-bar">
+        <div class="onb-progress-fill" style="width:{{ (paso/6*100)|round }}%"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Contenido del paso -->
+  <main class="onb-main">
+    <div class="onb-card">
+      <div class="onb-header">
+        <div class="step-badge">{{ pasos[paso-1].icono }} Paso {{ paso }} de 6</div>
+        <h1>{{ pasos[paso-1].titulo }}</h1>
+        <p>
+          {% if paso==1 %}Cuéntanos sobre tu empresa para que el chatbot pueda presentarse correctamente.
+          {% elif paso==2 %}Define cómo debe comunicarse tu asistente con los usuarios.
+          {% elif paso==3 %}Configura la disponibilidad y ámbito de tu servicio.
+          {% elif paso==4 %}Describe tus productos o servicios para que el bot pueda informar con precisión.
+          {% elif paso==5 %}Las políticas claras reducen incidencias y mejoran la satisfacción.
+          {% elif paso==6 %}Añade los datos de contacto para que el bot pueda derivar consultas complejas.
+          {% endif %}
+        </p>
+      </div>
+
+      <form method="POST">
+        {% if paso == 1 %}
+        <div class="form-section">
+          <div class="form-section-title">🏢 Sobre la empresa</div>
+          <div class="form-group">
+            <label>Sector / industria *</label>
+            <select name="sector">
+              <option value="">Selecciona tu sector…</option>
+              {% for s in ["Retail / Comercio","Mayorista / Distribución","Hostelería / Restauración","Salud y bienestar","Tecnología / Software","Servicios profesionales","Construcción / Reformas","Educación / Formación","Logística / Transporte","Fabricación / Industria","Inmobiliaria","Turismo / Viajes","Alimentación","Moda / Textil","Otro"] %}
+              <option value="{{ s }}" {% if empresa.sector==s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Descripción de la empresa *</label>
+            <textarea name="descripcion" rows="4" placeholder="Ej: Somos una empresa mayorista de material eléctrico con 20 años de experiencia, especializada en proyectos industriales y residenciales en toda España.">{{ empresa.descripcion or '' }}</textarea>
+            <div class="hint">Cuanto más detallada, más precisa será la IA. Incluye qué hacéis, a quién servís y qué os diferencia.</div>
+          </div>
+        </div>
+
+        {% elif paso == 2 %}
+        <div class="form-section">
+          <div class="form-section-title">🗣️ Tono de comunicación</div>
+          <div class="form-group">
+            <label>¿Cómo debe hablar el asistente?</label>
+            <div class="tono-grid">
+              {% for t in [("profesional","💼","Profesional"),("amigable","😊","Amigable"),("formal","🎩","Formal"),("cercano","🤝","Cercano"),("tecnico","🔬","Técnico"),("juvenil","⚡","Juvenil")] %}
+              <div class="tono-opt">
+                <input type="radio" name="tono" value="{{ t[0] }}" id="t{{ t[0] }}" {% if (empresa.tono or 'profesional')==t[0] %}checked{% endif %}>
+                <label class="tono-label" for="t{{ t[0] }}">
+                  <span class="tono-icon">{{ t[1] }}</span>
+                  <span class="tono-name">{{ t[2] }}</span>
+                </label>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">⚙️ Configuración del agente</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nombre del asistente</label>
+              <input type="text" name="nombre_agente" placeholder="Ej: Sara, Alex, Asistente…" value="{{ empresa.nombre_agente or 'Asistente' }}">
+              <div class="hint">Como se presentará el bot</div>
+            </div>
+            <div class="form-group">
+              <label>Idiomas disponibles</label>
+              <input type="text" name="idiomas" placeholder="Español, English, Català…" value="{{ empresa.idiomas or 'Español' }}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Mensaje de bienvenida personalizado</label>
+            <textarea name="saludo_inicial" rows="2" placeholder="Ej: ¡Hola! Soy Sara, el asistente virtual de [empresa]. ¿En qué puedo ayudarte hoy?">{{ empresa.saludo_inicial or '' }}</textarea>
+          </div>
+        </div>
+
+        {% elif paso == 3 %}
+        <div class="form-section">
+          <div class="form-section-title">🕐 Disponibilidad</div>
+          <div class="form-group">
+            <label>Horario de atención humana</label>
+            <input type="text" name="horario" placeholder="Ej: Lunes a viernes de 9:00 a 18:00. Sábados de 9:00 a 14:00." value="{{ empresa.horario or '' }}">
+            <div class="hint">El bot indicará esto cuando alguien pregunte por atención personalizada</div>
+          </div>
+          <div class="form-group">
+            <label>Tiempo estimado de respuesta humana</label>
+            <input type="text" name="tiempo_respuesta" placeholder="Ej: Respondemos en menos de 2 horas en horario laboral" value="{{ empresa.tiempo_respuesta or '' }}">
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">📍 Ámbito de servicio</div>
+          <div class="form-group">
+            <label>Zonas de servicio / cobertura</label>
+            <textarea name="zonas_servicio" rows="2" placeholder="Ej: Toda España peninsular. Envíos internacionales a Europa. Servicio técnico presencial solo en Comunidad Valenciana.">{{ empresa.zonas_servicio or '' }}</textarea>
+          </div>
+        </div>
+
+        {% elif paso == 4 %}
+        <div class="form-section">
+          <div class="form-section-title">📦 Catálogo de productos/servicios</div>
+          <div class="form-group">
+            <label>Describe tus productos o servicios principales *</label>
+            <textarea name="productos" rows="6" placeholder="Ej: — Material eléctrico: cables, cuadros, automatismos, iluminación LED&#10;— Herramientas eléctricas de las principales marcas (Bosch, Makita, DeWalt)&#10;— Servicio de asesoramiento técnico gratuito&#10;— Instalación y mantenimiento bajo presupuesto">{{ empresa.productos or '' }}</textarea>
+            <div class="hint">Lista tus productos/servicios. Incluye marcas, categorías o especialidades relevantes.</div>
+          </div>
+          <div class="form-group">
+            <label>Información sobre precios</label>
+            <textarea name="precios_info" rows="3" placeholder="Ej: Precios de tarifa disponibles en web. Descuentos por volumen para clientes profesionales. Presupuesto gratuito para proyectos. IVA no incluido en precios de catálogo.">{{ empresa.precios_info or '' }}</textarea>
+          </div>
+        </div>
+
+        {% elif paso == 5 %}
+        <div class="form-section">
+          <div class="form-section-title">↩️ Devoluciones y garantías</div>
+          <div class="form-group">
+            <label>Política de devoluciones</label>
+            <textarea name="politica_devolucion" rows="3" placeholder="Ej: Aceptamos devoluciones en 30 días desde la recepción. El producto debe estar sin usar y en su embalaje original. Los gastos de devolución corren a cargo del cliente salvo error nuestro.">{{ empresa.politica_devolucion or '' }}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Garantías</label>
+            <textarea name="garantias" rows="2" placeholder="Ej: Todos los productos tienen garantía mínima de 2 años según normativa europea. Herramientas profesionales con garantía extendida de 3 años.">{{ empresa.garantias or '' }}</textarea>
+          </div>
+        </div>
+        <div class="form-section">
+          <div class="form-section-title">🚚 Envíos</div>
+          <div class="form-group">
+            <label>Política de envío y entrega</label>
+            <textarea name="politica_envio" rows="3" placeholder="Ej: Envío gratuito en pedidos superiores a 150€. Entrega en 24-48h laborables. Pedidos realizados antes de las 14:00 salen el mismo día. Recogida en almacén disponible.">{{ empresa.politica_envio or '' }}</textarea>
+          </div>
+        </div>
+
+        {% elif paso == 6 %}
+        <div class="form-section">
+          <div class="form-section-title">📞 Contacto directo</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Email de contacto</label>
+              <input type="email" name="email_contacto" placeholder="info@empresa.com" value="{{ empresa.email_contacto or '' }}">
+            </div>
+            <div class="form-group">
+              <label>Teléfono</label>
+              <input type="text" name="telefono" placeholder="+34 960 000 000" value="{{ empresa.telefono or '' }}">
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Página web</label>
+              <input type="text" name="web" placeholder="https://www.empresa.com" value="{{ empresa.web or '' }}">
+            </div>
+            <div class="form-group">
+              <label>Dirección física</label>
+              <input type="text" name="direccion" placeholder="Calle Mayor 1, Valencia" value="{{ empresa.direccion or '' }}">
+            </div>
+          </div>
+        </div>
+        <div class="form-section" style="background:linear-gradient(135deg,rgba(108,71,255,0.05),rgba(0,212,255,0.05));border-color:var(--violet-light)">
+          <div style="text-align:center;padding:8px 0">
+            <div style="font-size:36px;margin-bottom:8px">🎉</div>
+            <h3 style="font-size:18px;font-weight:700;margin-bottom:6px">¡Casi listo!</h3>
+            <p style="font-size:14px;color:var(--text2)">Después de esto podrás añadir tus preguntas frecuentes y activar el chat.</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="onb-footer">
+          <button type="submit" name="saltar" value="1" class="onb-skip" formnovalidate>
+            Completar después →
+          </button>
+          <div style="display:flex;gap:10px;align-items:center">
+            {% if paso > 1 %}
+            <a href="/onboarding/{{ paso-1 }}" class="btn btn-ghost">← Atrás</a>
+            {% endif %}
+            <button type="submit" class="btn btn-primary">
+              {% if paso == 6 %}Finalizar y abrir panel ✓{% else %}Continuar →{% endif %}
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+{% endblock %}

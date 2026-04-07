@@ -1,0 +1,435 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · ReplyBot{% endblock %}
+{% block extra_head %}
+<style>
+.layout { display:flex; min-height:100vh; }
+.sidebar {
+  width:240px; flex-shrink:0; background:var(--surface);
+  border-right:1.5px solid var(--border);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh; overflow-y:auto;
+}
+.sidebar-logo { padding:22px 20px 18px; border-bottom:1.5px solid var(--border); }
+.sidebar-logo h1 { font-size:18px; font-weight:800; background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sidebar-logo p { font-size:11px; color:var(--text3); margin-top:2px; }
+.sidebar-section { padding:14px 12px 6px; }
+.sidebar-section-label { font-size:10px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.08em; padding:0 8px; margin-bottom:4px; }
+.nav-link {
+  display:flex; align-items:center; gap:10px; padding:9px 10px;
+  border-radius:10px; font-size:13px; font-weight:500; color:var(--text2);
+  text-decoration:none; transition:all 0.15s; cursor:pointer; border:none; background:none; font-family:var(--font); width:100%;
+}
+.nav-link:hover { background:var(--violet-light); color:var(--violet); opacity:1; }
+.nav-link.active { background:var(--violet-light); color:var(--violet); font-weight:600; }
+.nav-link .nav-icon { font-size:16px; width:22px; text-align:center; }
+.sidebar-footer { margin-top:auto; padding:14px 12px; border-top:1.5px solid var(--border); }
+.user-pill { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; }
+.user-av { width:32px; height:32px; border-radius:50%; background:var(--grad); display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700; flex-shrink:0; }
+.user-info h4 { font-size:12px; font-weight:600; }
+.user-info p { font-size:11px; color:var(--text3); }
+
+.main { flex:1; overflow-y:auto; }
+.topbar {
+  padding:16px 28px; background:var(--surface); border-bottom:1.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:20;
+}
+.topbar h2 { font-size:17px; font-weight:700; }
+.topbar-right { display:flex; gap:10px; align-items:center; }
+.content { padding:28px; }
+
+/* Stats */
+.stats { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+.stat {
+  background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg);
+  padding:20px; position:relative; overflow:hidden;
+}
+.stat::before { content:''; position:absolute; top:-20px; right:-20px; width:80px; height:80px; border-radius:50%; opacity:0.08; }
+.stat-1::before { background:var(--violet); }
+.stat-2::before { background:var(--cyan); }
+.stat-3::before { background:var(--pink); }
+.stat-4::before { background:var(--green); }
+.stat-icon { font-size:22px; margin-bottom:10px; }
+.stat-val { font-size:30px; font-weight:800; line-height:1; margin-bottom:4px; }
+.stat-1 .stat-val { background:var(--grad); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.stat-label { font-size:12px; color:var(--text2); }
+
+/* Chat link banner */
+.chat-banner {
+  background:linear-gradient(135deg,var(--violet-light),rgba(0,212,255,0.08));
+  border:1.5px solid var(--border2); border-radius:var(--radius-lg); padding:16px 20px;
+  display:flex; align-items:center; justify-content:space-between; margin-bottom:24px;
+}
+.chat-banner-left { display:flex; align-items:center; gap:12px; }
+.chat-banner-left .icon { font-size:24px; }
+.chat-banner-left h3 { font-size:14px; font-weight:700; }
+.chat-banner-left p { font-size:12px; color:var(--text2); }
+.chat-url { font-family:var(--mono); font-size:12px; background:var(--surface); border:1.5px solid var(--border); padding:6px 12px; border-radius:8px; color:var(--violet); cursor:pointer; transition:all 0.2s; }
+.chat-url:hover { background:var(--violet-light); }
+
+/* Tabs */
+.tabs { display:flex; gap:4px; border-bottom:1.5px solid var(--border); margin-bottom:22px; }
+.tab { padding:10px 18px; font-size:13px; font-weight:600; cursor:pointer; border:none; background:none; color:var(--text2); border-bottom:2.5px solid transparent; margin-bottom:-1.5px; transition:all 0.2s; font-family:var(--font); border-radius:0; }
+.tab:hover { color:var(--text); }
+.tab.active { color:var(--violet); border-bottom-color:var(--violet); }
+
+/* Sections */
+.section { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); margin-bottom:16px; overflow:hidden; }
+.section-head { padding:14px 18px; border-bottom:1.5px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+.section-head h3 { font-size:14px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.section-body { padding:18px; }
+
+/* Table */
+.tbl { width:100%; border-collapse:collapse; }
+.tbl th { text-align:left; padding:9px 14px; font-size:11px; font-weight:700; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; border-bottom:1.5px solid var(--border); background:var(--bg); }
+.tbl td { padding:12px 14px; border-bottom:1px solid var(--border); font-size:13px; vertical-align:top; }
+.tbl tr:last-child td { border-bottom:none; }
+.tbl tr:hover td { background:rgba(108,71,255,0.02); }
+.tbl-q { font-weight:600; margin-bottom:3px; }
+.tbl-a { color:var(--text2); font-size:12px; line-height:1.5; }
+.tbl-actions { display:flex; gap:5px; }
+.empty-row td { text-align:center; padding:40px; color:var(--text3); font-size:14px; }
+
+/* Cat grid */
+.cat-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+.cat-card { background:var(--bg); border:1.5px solid var(--border); border-radius:var(--radius); padding:14px; display:flex; align-items:center; gap:12px; }
+.cat-emoji { font-size:26px; }
+.cat-info { flex:1; min-width:0; }
+.cat-info h4 { font-size:13px; font-weight:700; }
+.cat-info p { font-size:11px; color:var(--text3); }
+.cat-acts { display:flex; gap:5px; }
+
+/* Form add */
+.add-form { background:var(--bg); border:1.5px dashed var(--border2); border-radius:var(--radius); padding:16px; }
+
+/* Modal */
+.overlay { display:none; position:fixed; inset:0; background:rgba(22,20,58,0.5); backdrop-filter:blur(4px); z-index:100; align-items:center; justify-content:center; }
+.overlay.open { display:flex; }
+.modal { background:var(--surface); border:1.5px solid var(--border); border-radius:var(--radius-lg); padding:26px; width:520px; max-width:95vw; max-height:90vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
+.modal h3 { font-size:17px; font-weight:800; margin-bottom:18px; }
+.modal-foot { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+.form-group { margin-bottom:14px; }
+.form-group label { display:block; font-size:13px; font-weight:600; color:var(--text2); margin-bottom:6px; }
+.form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+@media(max-width:900px){ .stats{grid-template-columns:repeat(2,1fr)} }
+@media(max-width:600px){ .sidebar{display:none} .stats{grid-template-columns:1fr 1fr} }
+</style>
+{% endblock %}
+{% block body %}
+<div class="layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>ReplyBot 🤖</h1>
+      <p>Panel de administración</p>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Principal</div>
+      <a class="nav-link active" href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-link" href="/historial"><span class="nav-icon">💬</span> Historial</a>
+      <a class="nav-link" href="/perfil"><span class="nav-icon">🏢</span> Perfil empresa</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Chat</div>
+      <a class="nav-link" href="/chat/{{ empresa.id }}" target="_blank"><span class="nav-icon">🔗</span> Ver chat público</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-av">{{ empresa.nombre[0].upper() }}</div>
+        <div class="user-info">
+          <h4>{{ empresa.nombre[:20] }}</h4>
+          <p>{{ empresa.email[:24] }}</p>
+        </div>
+      </div>
+      <a href="/logout" class="nav-link" style="margin-top:4px"><span class="nav-icon">🚪</span> Cerrar sesión</a>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="topbar">
+      <h2>Dashboard</h2>
+      <div class="topbar-right">
+        <button class="btn btn-primary btn-sm" onclick="openModal('modal-nueva-faq')">+ Nueva FAQ</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat stat-1">
+          <div class="stat-icon">💬</div>
+          <div class="stat-val">{{ stats.faqs }}</div>
+          <div class="stat-label">FAQs activas</div>
+        </div>
+        <div class="stat stat-2">
+          <div class="stat-icon">📁</div>
+          <div class="stat-val">{{ stats.cats }}</div>
+          <div class="stat-label">Categorías</div>
+        </div>
+        <div class="stat stat-3">
+          <div class="stat-icon">🗨️</div>
+          <div class="stat-val">{{ stats.chats }}</div>
+          <div class="stat-label">Consultas totales</div>
+        </div>
+        <div class="stat stat-4">
+          <div class="stat-icon">📅</div>
+          <div class="stat-val">{{ stats.hoy }}</div>
+          <div class="stat-label">Consultas hoy</div>
+        </div>
+      </div>
+
+      <!-- Chat link -->
+      <div class="chat-banner">
+        <div class="chat-banner-left">
+          <div class="icon">🔗</div>
+          <div>
+            <h3>Enlace del chat público</h3>
+            <p>Comparte esta URL con tus clientes y proveedores</p>
+          </div>
+        </div>
+        <div class="chat-url" onclick="copyUrl()" title="Clic para copiar">
+          /chat/{{ empresa.id }}
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('faqs',this)">📝 Preguntas y respuestas</button>
+        <button class="tab" onclick="switchTab('cats',this)">📁 Categorías</button>
+      </div>
+
+      <!-- Tab FAQs -->
+      <div id="tab-faqs">
+        {% for cat in categorias %}
+        {% set cat_faqs = faqs|selectattr("categoria_id","equalto",cat.id)|list %}
+        <div class="section">
+          <div class="section-head">
+            <h3>{{ cat.icono }} {{ cat.nombre }} <span class="badge badge-violet">{{ cat_faqs|length }}</span></h3>
+            <button class="btn btn-primary btn-sm" onclick="openFaqCat({{ cat.id }},'{{ cat.nombre }}')">+ Añadir</button>
+          </div>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th style="width:38%">Pregunta</th>
+                <th>Respuesta</th>
+                <th style="width:75px">Estado</th>
+                <th style="width:100px">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for f in cat_faqs %}
+              <tr {% if not f.activa %}style="opacity:0.5"{% endif %}>
+                <td><div class="tbl-q">{{ f.pregunta }}</div></td>
+                <td><div class="tbl-a">{{ f.respuesta[:110] }}{% if f.respuesta|length>110 %}…{% endif %}</div></td>
+                <td><span class="badge {% if f.activa %}badge-green{% else %}badge-red{% endif %}">{% if f.activa %}Activa{% else %}Pausa{% endif %}</span></td>
+                <td>
+                  <div class="tbl-actions">
+                    <button class="btn btn-ghost btn-icon btn-sm" onclick='editFaq({{ f.id }},{{ f.categoria_id }},{{ f.pregunta|tojson }},{{ f.respuesta|tojson }},{{ f.activa }})' title="Editar">✏️</button>
+                    <form method="POST" action="/faqs/{{ f.id }}/toggle" style="display:inline">
+                      <button class="btn btn-ghost btn-icon btn-sm" title="Toggle">{% if f.activa %}⏸{% else %}▶{% endif %}</button>
+                    </form>
+                    <form method="POST" action="/faqs/{{ f.id }}/borrar" style="display:inline" onsubmit="return confirm('¿Borrar esta FAQ?')">
+                      <button class="btn btn-danger btn-icon btn-sm">🗑</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {% else %}
+              <tr class="empty-row"><td colspan="4">Sin preguntas aún — añade la primera ↑</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="section"><div class="section-body" style="text-align:center;color:var(--text3);padding:40px">Crea primero una categoría en la pestaña Categorías</div></div>
+        {% endfor %}
+      </div>
+
+      <!-- Tab Categorías -->
+      <div id="tab-cats" style="display:none">
+        <div class="section" style="margin-bottom:16px">
+          <div class="section-head"><h3>➕ Nueva categoría</h3></div>
+          <div class="section-body">
+            <form method="POST" action="/categorias">
+              <div class="form-row" style="align-items:flex-end">
+                <div class="form-group" style="margin:0">
+                  <label>Nombre</label>
+                  <input type="text" name="nombre" placeholder="Ej: Soporte técnico" required>
+                </div>
+                <div class="form-group" style="margin:0;max-width:90px">
+                  <label>Icono</label>
+                  <input type="text" name="icono" value="💬" placeholder="💬">
+                </div>
+                <button class="btn btn-primary" style="height:42px;align-self:flex-end">Crear</button>
+              </div>
+            </form>
+          </div>
+        </div>
+        <div class="cat-grid">
+          {% for cat in categorias %}
+          <div class="cat-card">
+            <div class="cat-emoji">{{ cat.icono }}</div>
+            <div class="cat-info">
+              <h4>{{ cat.nombre }}</h4>
+              <p>{{ faqs|selectattr("categoria_id","equalto",cat.id)|list|length }} FAQs</p>
+            </div>
+            <div class="cat-acts">
+              <button class="btn btn-ghost btn-icon btn-sm" onclick='editCat({{ cat.id }},{{ cat.nombre|tojson }},{{ cat.icono|tojson }})'>✏️</button>
+              <form method="POST" action="/categorias/{{ cat.id }}/borrar" onsubmit="return confirm('¿Borrar categoría y todas sus FAQs?')">
+                <button class="btn btn-danger btn-icon btn-sm">🗑</button>
+              </form>
+            </div>
+          </div>
+          {% else %}
+          <p style="color:var(--text3);font-size:14px">Sin categorías todavía.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- Modal nueva FAQ (general) -->
+<div class="overlay" id="modal-nueva-faq" onclick="closeOut(event,this)">
+  <div class="modal">
+    <h3>➕ Nueva pregunta frecuente</h3>
+    <form method="POST" action="/faqs">
+      <div class="form-group">
+        <label>Categoría</label>
+        <select name="categoria_id" required>
+          {% for cat in categorias %}<option value="{{ cat.id }}">{{ cat.icono }} {{ cat.nombre }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pregunta</label>
+        <input type="text" name="pregunta" placeholder="¿Cómo puedo…?" required>
+      </div>
+      <div class="form-group">
+        <label>Respuesta</label>
+        <textarea name="respuesta" rows="4" placeholder="Escribe la respuesta exacta que dará el chatbot…" required></textarea>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-nueva-faq')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar FAQ</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal editar FAQ -->
+<div class="overlay" id="modal-edit-faq" onclick="closeOut(event,this)">
+  <div class="modal">
+    <h3>✏️ Editar FAQ</h3>
+    <form method="POST" id="form-edit-faq">
+      <div class="form-group">
+        <label>Categoría</label>
+        <select name="categoria_id" id="ef-cat" required>
+          {% for cat in categorias %}<option value="{{ cat.id }}">{{ cat.icono }} {{ cat.nombre }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Pregunta</label>
+        <input type="text" name="pregunta" id="ef-q" required>
+      </div>
+      <div class="form-group">
+        <label>Respuesta</label>
+        <textarea name="respuesta" id="ef-r" rows="4" required></textarea>
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" name="activa" id="ef-activa" style="width:auto;accent-color:var(--violet)">
+        <label for="ef-activa" style="margin:0;cursor:pointer">FAQ activa (visible en el chat)</label>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-faq')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar cambios</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal añadir FAQ en categoría -->
+<div class="overlay" id="modal-faq-cat" onclick="closeOut(event,this)">
+  <div class="modal">
+    <h3>➕ Añadir FAQ</h3>
+    <form method="POST" action="/faqs">
+      <input type="hidden" name="categoria_id" id="fc-catid">
+      <div class="form-group">
+        <label>Categoría</label>
+        <input type="text" id="fc-catname" disabled style="opacity:0.6">
+      </div>
+      <div class="form-group">
+        <label>Pregunta</label>
+        <input type="text" name="pregunta" placeholder="¿Cómo puedo…?" required>
+      </div>
+      <div class="form-group">
+        <label>Respuesta</label>
+        <textarea name="respuesta" rows="4" placeholder="Respuesta completa…" required></textarea>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-faq-cat')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal editar categoría -->
+<div class="overlay" id="modal-edit-cat" onclick="closeOut(event,this)">
+  <div class="modal">
+    <h3>✏️ Editar categoría</h3>
+    <form method="POST" id="form-edit-cat">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nombre</label>
+          <input type="text" name="nombre" id="ec-nombre" required>
+        </div>
+        <div class="form-group" style="max-width:90px">
+          <label>Icono</label>
+          <input type="text" name="icono" id="ec-icono">
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-cat')">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-faqs').style.display = name==='faqs'?'block':'none';
+  document.getElementById('tab-cats').style.display = name==='cats'?'block':'none';
+}
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+function closeOut(e,el){if(e.target===el) el.classList.remove('open')}
+
+function editFaq(id,catId,q,r,activa){
+  document.getElementById('form-edit-faq').action=`/faqs/${id}/editar`;
+  document.getElementById('ef-cat').value=catId;
+  document.getElementById('ef-q').value=q;
+  document.getElementById('ef-r').value=r;
+  document.getElementById('ef-activa').checked=activa==1;
+  openModal('modal-edit-faq');
+}
+function editCat(id,nombre,icono){
+  document.getElementById('form-edit-cat').action=`/categorias/${id}/editar`;
+  document.getElementById('ec-nombre').value=nombre;
+  document.getElementById('ec-icono').value=icono;
+  openModal('modal-edit-cat');
+}
+function openFaqCat(catId,catNombre){
+  document.getElementById('fc-catid').value=catId;
+  document.getElementById('fc-catname').value=catNombre;
+  openModal('modal-faq-cat');
+}
+function copyUrl(){
+  navigator.clipboard.writeText(window.location.origin+'/chat/{{ empresa.id }}');
+  toast('✅ URL copiada al portapapeles');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}Historial · ReplyBot{% endblock %}
+{% block extra_head %}
+<style>
+.layout{display:flex;min-height:100vh}
+.sidebar{width:240px;flex-shrink:0;background:var(--surface);border-right:1.5px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1.5px solid var(--border)}
+.sidebar-logo h1{font-size:18px;font-weight:800;background:var(--grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar-logo p{font-size:11px;color:var(--text3);margin-top:2px}
+.sidebar-section{padding:14px 12px 6px}
+.sidebar-section-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:0 8px;margin-bottom:4px}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:10px;font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;transition:all .15s;border:none;background:none;font-family:var(--font);width:100%}
+.nav-link:hover{background:var(--violet-light);color:var(--violet);opacity:1}
+.nav-link.active{background:var(--violet-light);color:var(--violet);font-weight:600}
+.nav-link .nav-icon{font-size:16px;width:22px;text-align:center}
+.sidebar-footer{margin-top:auto;padding:14px 12px;border-top:1.5px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px}
+.user-av{width:32px;height:32px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0}
+.user-info h4{font-size:12px;font-weight:600}
+.user-info p{font-size:11px;color:var(--text3)}
+.main{flex:1;overflow-y:auto}
+.topbar{padding:16px 28px;background:var(--surface);border-bottom:1.5px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:20}
+.topbar h2{font-size:17px;font-weight:700}
+.content{padding:28px}
+.tbl-wrap{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th{text-align:left;padding:10px 16px;font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;border-bottom:1.5px solid var(--border);background:var(--bg)}
+.tbl td{padding:13px 16px;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(108,71,255,.02)}
+.empty{text-align:center;padding:60px;color:var(--text3);font-size:15px}
+</style>
+{% endblock %}
+{% block body %}
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><h1>ReplyBot 🤖</h1><p>Panel de administración</p></div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Principal</div>
+      <a class="nav-link" href="/dashboard"><span class="nav-icon">📊</span> Dashboard</a>
+      <a class="nav-link active" href="/historial"><span class="nav-icon">💬</span> Historial</a>
+      <a class="nav-link" href="/perfil"><span class="nav-icon">🏢</span> Perfil empresa</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Chat</div>
+      <a class="nav-link" href="/chat/{{ empresa.id }}" target="_blank"><span class="nav-icon">🔗</span> Ver chat público</a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-av">{{ empresa.nombre[0].upper() }}</div>
+        <div class="user-info"><h4>{{ empresa.nombre[:20] }}</h4><p>{{ empresa.email[:24] }}</p></div>
+      </div>
+      <a href="/logout" class="nav-link" style="margin-top:4px"><span class="nav-icon">🚪</span> Cerrar sesión</a>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <h2>💬 Historial de consultas</h2>
+      {% if registros %}
+      <form method="POST" action="/historial/borrar" onsubmit="return confirm('¿Borrar todo el historial?')">
+        <button class="btn btn-danger btn-sm">🗑 Limpiar historial</button>
+      </form>
+      {% endif %}
+    </div>
+    <div class="content">
+      {% if registros %}
+      <div class="tbl-wrap">
+        <table class="tbl">
+          <thead><tr><th>Fecha</th><th>Pregunta del usuario</th><th>Respuesta</th><th>Tipo</th></tr></thead>
+          <tbody>
+            {% for r in registros %}
+            <tr>
+              <td style="white-space:nowrap;color:var(--text3);font-size:12px">{{ r.creada_en[:16] }}</td>
+              <td style="max-width:220px;font-weight:500">{{ r.pregunta }}</td>
+              <td style="max-width:320px;color:var(--text2)">{{ r.respuesta[:140] }}{% if r.respuesta|length>140 %}…{% endif %}</td>
+              <td><span class="badge {% if r.fue_ia %}badge-violet{% else %}badge-green{% endif %}">{% if r.fue_ia %}🤖 IA{% else %}📋 FAQ{% endif %}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty">Sin consultas registradas todavía.<br><span style="font-size:13px;margin-top:8px;display:block">Las conversaciones del chat aparecerán aquí.</span></div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+{% endblock %}
